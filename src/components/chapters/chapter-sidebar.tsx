@@ -5,6 +5,16 @@ import { ChapterListItem } from "./chapter-list-item";
 import { CreateChapterDialog } from "./create-chapter-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 
 interface Props {
   novelId: string;
@@ -13,7 +23,22 @@ interface Props {
 }
 
 export function ChapterSidebar({ novelId, novelTitle, activeChapterId }: Props) {
-  const { chapters, isLoading, createChapter, deleteChapter, updateChapter } = useChapters(novelId);
+  const { chapters, isLoading, createChapter, deleteChapter, updateChapter, reorderChapters } =
+    useChapters(novelId);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = chapters.findIndex((c) => c.id === active.id);
+    const newIndex = chapters.findIndex((c) => c.id === over.id);
+    const reordered = arrayMove(chapters, oldIndex, newIndex);
+    reorderChapters(reordered.map((c) => c.id));
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -32,18 +57,22 @@ export function ChapterSidebar({ novelId, novelTitle, activeChapterId }: Props) 
             ))}
           </div>
         ) : (
-          <div className="space-y-0.5">
-            {chapters.map((chapter) => (
-              <ChapterListItem
-                key={chapter.id}
-                chapter={chapter}
-                novelId={novelId}
-                isActive={chapter.id === activeChapterId}
-                onDelete={deleteChapter}
-                onUpdate={updateChapter}
-              />
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={chapters.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-0.5">
+                {chapters.map((chapter) => (
+                  <ChapterListItem
+                    key={chapter.id}
+                    chapter={chapter}
+                    novelId={novelId}
+                    isActive={chapter.id === activeChapterId}
+                    onDelete={deleteChapter}
+                    onUpdate={updateChapter}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </ScrollArea>
 

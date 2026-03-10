@@ -6,7 +6,11 @@
       "Bash(node:*)",
       "Bash(npm install:*)",
       "Bash(ls:*)",
-      "Bash(export:*)"
+      "Bash(export:*)",
+      "Bash(git:*)",
+      "Bash(git stash:*)",
+      "Bash(pnpm prisma:*)",
+      "Bash(pnpm tsc:*)"
     ]
   }
 }

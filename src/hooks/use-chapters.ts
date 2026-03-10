@@ -61,5 +61,22 @@ export function useChapters(novelId: string) {
     return updated as Chapter;
   };
 
-  return { chapters, isLoading, error, createChapter, deleteChapter, updateChapter, refetch: fetchChapters };
+  const reorderChapters = async (orderedIds: string[]) => {
+    // Optimistic update
+    setChapters((prev) => {
+      const map = new Map(prev.map((c) => [c.id, c]));
+      return orderedIds.map((id, index) => ({ ...map.get(id)!, order: index + 1 }));
+    });
+    const res = await fetch(`/api/novels/${novelId}/chapters`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedIds }),
+    });
+    if (!res.ok) {
+      fetchChapters(); // revert on error
+      throw new Error("Failed to reorder chapters");
+    }
+  };
+
+  return { chapters, isLoading, error, createChapter, deleteChapter, updateChapter, reorderChapters, refetch: fetchChapters };
 }

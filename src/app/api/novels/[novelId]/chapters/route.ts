@@ -35,3 +35,25 @@ export async function POST(request: NextRequest, { params }: Params) {
   });
   return NextResponse.json(chapter, { status: 201 });
 }
+
+// PATCH /api/novels/[novelId]/chapters — reorder chapters
+export async function PATCH(request: NextRequest, { params }: Params) {
+  const { novelId } = await params;
+  const body = await request.json();
+  const { orderedIds } = body as { orderedIds: string[] };
+
+  if (!Array.isArray(orderedIds)) {
+    return NextResponse.json({ error: "orderedIds is required" }, { status: 400 });
+  }
+
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.chapter.update({
+        where: { id, novelId },
+        data: { order: index + 1 },
+      })
+    )
+  );
+
+  return NextResponse.json({ ok: true });
+}
