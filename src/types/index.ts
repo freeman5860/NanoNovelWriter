@@ -7,6 +7,8 @@ export interface Novel {
   aiModel: string | null;
   characters: string | null;
   outline: string | null;
+  wordGoal: number | null;
+  totalWordCount?: number;
   createdAt: Date;
   updatedAt: Date;
   chapters?: Chapter[];
@@ -43,6 +45,7 @@ export interface UpdateNovelInput {
   aiModel?: string;
   characters?: string;
   outline?: string;
+  wordGoal?: number | null;
 }
 
 export interface Character {

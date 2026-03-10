@@ -17,13 +17,14 @@ interface Props {
   novel: Novel;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (id: string, data: { title?: string; description?: string; genre?: string }) => Promise<Novel>;
+  onUpdate: (id: string, data: { title?: string; description?: string; genre?: string; wordGoal?: number | null }) => Promise<Novel>;
 }
 
 export function EditNovelDialog({ novel, open, onOpenChange, onUpdate }: Props) {
   const [title, setTitle] = useState(novel.title);
   const [description, setDescription] = useState(novel.description ?? "");
   const [genre, setGenre] = useState(novel.genre ?? "");
+  const [wordGoal, setWordGoal] = useState(novel.wordGoal?.toString() ?? "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,6 +33,7 @@ export function EditNovelDialog({ novel, open, onOpenChange, onUpdate }: Props) 
       setTitle(novel.title);
       setDescription(novel.description ?? "");
       setGenre(novel.genre ?? "");
+      setWordGoal(novel.wordGoal?.toString() ?? "");
       setError("");
     }
   }, [open, novel]);
@@ -42,6 +44,11 @@ export function EditNovelDialog({ novel, open, onOpenChange, onUpdate }: Props) 
       setError("请输入小说标题");
       return;
     }
+    const parsedGoal = wordGoal.trim() ? parseInt(wordGoal.trim(), 10) : null;
+    if (wordGoal.trim() && (isNaN(parsedGoal!) || parsedGoal! <= 0)) {
+      setError("字数目标请输入正整数");
+      return;
+    }
     setIsLoading(true);
     setError("");
     try {
@@ -49,6 +56,7 @@ export function EditNovelDialog({ novel, open, onOpenChange, onUpdate }: Props) 
         title: title.trim(),
         description: description || undefined,
         genre: genre || undefined,
+        wordGoal: parsedGoal,
       });
       onOpenChange(false);
     } catch (err) {
@@ -92,6 +100,17 @@ export function EditNovelDialog({ novel, open, onOpenChange, onUpdate }: Props) 
               onChange={(e) => setDescription(e.target.value)}
               placeholder="小说简介（可选）"
               rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-wordGoal">字数目标</Label>
+            <Input
+              id="edit-wordGoal"
+              type="number"
+              min={1}
+              value={wordGoal}
+              onChange={(e) => setWordGoal(e.target.value)}
+              placeholder="如：100000（可选）"
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

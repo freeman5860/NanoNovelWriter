@@ -4,9 +4,16 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   const novels = await prisma.novel.findMany({
     orderBy: { updatedAt: "desc" },
-    include: { _count: { select: { chapters: true } } },
+    include: {
+      _count: { select: { chapters: true } },
+      chapters: { select: { wordCount: true } },
+    },
   });
-  return NextResponse.json(novels);
+  const result = novels.map(({ chapters, ...novel }) => ({
+    ...novel,
+    totalWordCount: chapters.reduce((sum, c) => sum + c.wordCount, 0),
+  }));
+  return NextResponse.json(result);
 }
 
 export async function POST(request: NextRequest) {

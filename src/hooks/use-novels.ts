@@ -53,7 +53,7 @@ export function useNovels() {
 
   const updateNovel = async (
     id: string,
-    data: { title?: string; description?: string; genre?: string }
+    data: { title?: string; description?: string; genre?: string; wordGoal?: number | null }
   ) => {
     const res = await fetch(`/api/novels/${id}`, {
       method: "PATCH",

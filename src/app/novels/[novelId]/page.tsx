@@ -37,6 +37,7 @@ export default async function NovelDetailPage({ params }: Props) {
           initialOutline={novel.outline}
           chapters={novel.chapters}
           aiProvider={novel.aiProvider}
+          wordGoal={novel.wordGoal}
         />
       </main>
     </div>

@@ -18,11 +18,11 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(request: NextRequest, { params }: Params) {
   const { novelId } = await params;
   const body = await request.json();
-  const { title, description, genre, aiProvider, aiModel, characters, outline } = body;
+  const { title, description, genre, aiProvider, aiModel, characters, outline, wordGoal } = body;
 
   const novel = await prisma.novel.update({
     where: { id: novelId },
-    data: { title, description, genre, aiProvider, aiModel, characters, outline },
+    data: { title, description, genre, aiProvider, aiModel, characters, outline, wordGoal },
   });
   return NextResponse.json(novel);
 }

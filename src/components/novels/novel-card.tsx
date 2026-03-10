@@ -4,18 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Novel } from "@/types";
-import { BookOpen, Calendar, Pencil } from "lucide-react";
+import { BookOpen, Calendar, Pencil, Target } from "lucide-react";
 import { EditNovelDialog } from "./edit-novel-dialog";
 
 interface Props {
   novel: Novel & { _count?: { chapters: number } };
   onDelete: (id: string) => void;
-  onUpdate: (id: string, data: { title?: string; description?: string; genre?: string }) => Promise<Novel>;
+  onUpdate: (id: string, data: { title?: string; description?: string; genre?: string; wordGoal?: number | null }) => Promise<Novel>;
 }
 
 export function NovelCard({ novel, onDelete, onUpdate }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const chapterCount = novel._count?.chapters ?? novel.chapters?.length ?? 0;
+  const totalWords = novel.totalWordCount ?? 0;
+  const goal = novel.wordGoal;
+  const progress = goal && goal > 0 ? Math.min(100, Math.round((totalWords / goal) * 100)) : null;
 
   return (
     <>
@@ -35,6 +38,31 @@ export function NovelCard({ novel, onDelete, onUpdate }: Props) {
             {novel.description && (
               <p className="text-sm text-muted-foreground line-clamp-3">{novel.description}</p>
             )}
+            {/* 字数进度 */}
+            {goal ? (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Target className="h-3 w-3" />
+                    {totalWords.toLocaleString()} / {goal.toLocaleString()} 字
+                  </span>
+                  <span className={progress === 100 ? "text-green-600 font-medium" : ""}>
+                    {progress}%
+                  </span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${progress === 100 ? "bg-green-500" : "bg-primary"}`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            ) : totalWords > 0 ? (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Target className="h-3 w-3" />
+                已写 {totalWords.toLocaleString()} 字
+              </p>
+            ) : null}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <BookOpen className="h-3.5 w-3.5" />

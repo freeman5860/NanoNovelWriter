@@ -4,8 +4,15 @@ import { useState, useRef, useCallback } from "react";
 import { useAIStream } from "@/hooks/use-ai-stream";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Loader2, Check, Save } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sparkles, Loader2, Check, Save, Download, Target, BookOpen, BarChart2 } from "lucide-react";
 import { Chapter } from "@/types";
+import { exportNovelAsTxt, exportNovelAsMarkdown } from "@/lib/export";
 
 interface Props {
   novelId: string;
@@ -16,6 +23,7 @@ interface Props {
   initialOutline?: string | null;
   chapters: Chapter[];
   aiProvider?: string | null;
+  wordGoal?: number | null;
 }
 
 export function OutlinePanel({
@@ -27,6 +35,7 @@ export function OutlinePanel({
   initialOutline,
   chapters,
   aiProvider,
+  wordGoal,
 }: Props) {
   const [outline, setOutline] = useState(initialOutline ?? "");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -79,6 +88,9 @@ export function OutlinePanel({
 
   const displayText = isStreaming ? streamedText : outline;
 
+  const totalWords = chapters.reduce((sum, c) => sum + c.wordCount, 0);
+  const progress = wordGoal && wordGoal > 0 ? Math.min(100, Math.round((totalWords / wordGoal) * 100)) : null;
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-6 py-4 border-b">
@@ -99,6 +111,23 @@ export function OutlinePanel({
               已保存
             </span>
           )}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              disabled={chapters.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 transition-colors"
+            >
+              <Download className="h-3.5 w-3.5" />
+              导出
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportNovelAsTxt(novelTitle, chapters)}>
+                导出为 TXT
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportNovelAsMarkdown(novelTitle, chapters)}>
+                导出为 Markdown
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             size="sm"
             variant="outline"
@@ -126,6 +155,34 @@ export function OutlinePanel({
           {error}
         </div>
       )}
+
+      {/* 写作统计 */}
+      <div className="px-6 py-3 border-b bg-muted/30 flex items-center gap-6 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <BarChart2 className="h-3.5 w-3.5" />
+          总字数：<span className="font-medium text-foreground">{totalWords.toLocaleString()}</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <BookOpen className="h-3.5 w-3.5" />
+          章节数：<span className="font-medium text-foreground">{chapters.length}</span>
+        </span>
+        {wordGoal && (
+          <span className="flex items-center gap-1.5 ml-auto shrink-0">
+            <Target className="h-3.5 w-3.5" />
+            目标：
+            <span className={`font-medium ${progress === 100 ? "text-green-600" : "text-foreground"}`}>
+              {progress}%
+            </span>
+            <span>（{wordGoal.toLocaleString()} 字）</span>
+            <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${progress === 100 ? "bg-green-500" : "bg-primary"}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </span>
+        )}
+      </div>
 
       <div className="flex-1 p-6 overflow-y-auto">
         {isStreaming ? (

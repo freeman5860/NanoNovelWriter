@@ -18,6 +18,7 @@ model Novel {
   aiModel     String?
   characters  String?
   outline     String?
+  wordGoal    Int?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   chapters    Chapter[]
