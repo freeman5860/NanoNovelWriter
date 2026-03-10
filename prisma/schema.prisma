@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Novel {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  genre       String?
+  aiProvider  String?
+  aiModel     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  chapters    Chapter[]
+
+  @@map("novels")
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  novelId   String
+  title     String
+  content   String   @default("")
+  order     Int
+  wordCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  novel     Novel    @relation(fields: [novelId], references: [id], onDelete: Cascade)
+
+  @@unique([novelId, order])
+  @@index([novelId])
+  @@map("chapters")
+}
