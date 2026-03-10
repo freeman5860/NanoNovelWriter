@@ -9,6 +9,7 @@ const ACTION_LABELS: Record<AIActionType, string> = {
   generate: "生成开头",
   continue: "续写",
   polish: "润色",
+  outline: "生成大纲",
 };
 
 interface Props {
