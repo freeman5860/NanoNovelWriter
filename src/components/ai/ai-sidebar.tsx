@@ -4,24 +4,53 @@ import { useState } from "react";
 import { useAIStream } from "@/hooks/use-ai-stream";
 import { AiActionButton } from "./ai-action-button";
 import { StreamingText } from "./streaming-text";
+import { CharacterPanel } from "./character-panel";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X } from "lucide-react";
-import { AIActionType } from "@/types";
+import { Check, X, Download } from "lucide-react";
+import { AIActionType, Character } from "@/types";
+import { exportAsTxt, exportAsMarkdown } from "@/lib/export";
 
 interface Props {
+  novelId: string;
   novelTitle: string;
   chapterTitle: string;
+  initialCharacters: string | null;
   getContent: () => string;
   getSelectedText: () => string;
   onInsert: (text: string) => void;
   provider?: string;
 }
 
-export function AISidebar({ novelTitle, chapterTitle, getContent, getSelectedText, onInsert, provider }: Props) {
+export function AISidebar({
+  novelId,
+  novelTitle,
+  chapterTitle,
+  initialCharacters,
+  getContent,
+  getSelectedText,
+  onInsert,
+  provider,
+}: Props) {
   const { isStreaming, streamedText, error, generate, reset } = useAIStream();
   const [lastAction, setLastAction] = useState<AIActionType | null>(null);
+  const [characters, setCharacters] = useState<Character[]>(() => {
+    try {
+      return initialCharacters ? JSON.parse(initialCharacters) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleCharactersChange = async (newChars: Character[]) => {
+    setCharacters(newChars);
+    await fetch(`/api/novels/${novelId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ characters: JSON.stringify(newChars) }),
+    });
+  };
 
   const handleAction = async (action: AIActionType) => {
     setLastAction(action);
@@ -33,6 +62,7 @@ export function AISidebar({ novelTitle, chapterTitle, getContent, getSelectedTex
       chapterContent: getContent(),
       selectedText: action === "polish" ? getSelectedText() : undefined,
       provider,
+      characters: characters.length > 0 ? JSON.stringify(characters) : undefined,
     });
   };
 
@@ -48,6 +78,8 @@ export function AISidebar({ novelTitle, chapterTitle, getContent, getSelectedTex
       <div className="px-4 py-3 border-b">
         <h3 className="font-semibold text-sm">AI 助手</h3>
       </div>
+
+      <CharacterPanel characters={characters} onChange={handleCharactersChange} />
 
       <div className="px-3 py-3 space-y-2 border-b">
         <div className="flex flex-wrap gap-2">
@@ -99,6 +131,32 @@ export function AISidebar({ novelTitle, chapterTitle, getContent, getSelectedTex
           </div>
         </>
       )}
+
+      <Separator />
+      <div className="px-3 py-3 space-y-1.5">
+        <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+          <Download className="h-3 w-3" />
+          导出本章
+        </p>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 text-xs"
+            onClick={() => exportAsTxt(novelTitle, chapterTitle, getContent())}
+          >
+            TXT
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 text-xs"
+            onClick={() => exportAsMarkdown(novelTitle, chapterTitle, getContent())}
+          >
+            Markdown
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

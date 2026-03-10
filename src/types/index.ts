@@ -5,6 +5,7 @@ export interface Novel {
   genre: string | null;
   aiProvider: string | null;
   aiModel: string | null;
+  characters: string | null;
   createdAt: Date;
   updatedAt: Date;
   chapters?: Chapter[];
@@ -39,6 +40,13 @@ export interface UpdateNovelInput {
   genre?: string;
   aiProvider?: string;
   aiModel?: string;
+  characters?: string;
+}
+
+export interface Character {
+  name: string;
+  role: string;
+  description: string;
 }
 
 export interface CreateChapterInput {
@@ -60,4 +68,5 @@ export interface AIGenerateRequest {
   novelTitle?: string;
   chapterTitle?: string;
   provider?: string;
+  characters?: string;
 }

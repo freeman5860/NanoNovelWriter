@@ -49,5 +49,17 @@ export function useChapters(novelId: string) {
     setChapters((prev) => prev.filter((c) => c.id !== chapterId));
   };
 
-  return { chapters, isLoading, error, createChapter, deleteChapter, refetch: fetchChapters };
+  const updateChapter = async (chapterId: string, data: { title?: string }) => {
+    const res = await fetch(`/api/novels/${novelId}/chapters/${chapterId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update chapter");
+    const updated = await res.json();
+    setChapters((prev) => prev.map((c) => (c.id === chapterId ? { ...c, ...updated } : c)));
+    return updated as Chapter;
+  };
+
+  return { chapters, isLoading, error, createChapter, deleteChapter, updateChapter, refetch: fetchChapters };
 }

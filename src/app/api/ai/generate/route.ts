@@ -9,16 +9,31 @@ function buildPrompts(body: AIGenerateRequest): {
   const novelTitle = body.novelTitle ?? "未命名小说";
   const chapterTitle = body.chapterTitle ?? "未命名章节";
 
+  let characterContext = "";
+  if (body.characters) {
+    try {
+      const chars = JSON.parse(body.characters);
+      if (Array.isArray(chars) && chars.length > 0) {
+        const lines = chars.map((c: { name: string; role: string; description: string }) =>
+          `- ${c.name}（${c.role}）：${c.description}`
+        );
+        characterContext = `\n\n主要角色：\n${lines.join("\n")}`;
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
+
   switch (body.action) {
     case "generate":
       return {
-        systemPrompt: `你是小说创作助手，书名《${novelTitle}》。只输出正文，不要任何解释或标题。`,
+        systemPrompt: `你是小说创作助手，书名《${novelTitle}》。${characterContext}只输出正文，不要任何解释或标题。`,
         userPrompt: `为章节《${chapterTitle}》写一段精彩的开头，约300字。`,
       };
     case "continue": {
       const last500 = body.chapterContent?.slice(-500) ?? "";
       return {
-        systemPrompt: `你是小说创作助手，书名《${novelTitle}》。只输出正文，不要任何解释。`,
+        systemPrompt: `你是小说创作助手，书名《${novelTitle}》。${characterContext}只输出正文，不要任何解释。`,
         userPrompt: `续写以下内容的后续，保持风格一致，约300字：\n\n${last500}`,
       };
     }

@@ -16,6 +16,7 @@ model Novel {
   genre       String?
   aiProvider  String?
   aiModel     String?
+  characters  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   chapters    Chapter[]

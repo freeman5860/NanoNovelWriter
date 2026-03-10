@@ -30,6 +30,7 @@ export default async function ChapterEditorPage({ params }: Props) {
       chapterTitle={chapter.title}
       initialContent={chapter.content}
       aiProvider={novel.aiProvider}
+      initialCharacters={novel.characters}
     />
   );
 }

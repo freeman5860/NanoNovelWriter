@@ -51,5 +51,20 @@ export function useNovels() {
     setNovels((prev) => prev.filter((n) => n.id !== id));
   };
 
-  return { novels, isLoading, error, createNovel, deleteNovel, refetch: fetchNovels };
+  const updateNovel = async (
+    id: string,
+    data: { title?: string; description?: string; genre?: string }
+  ) => {
+    const res = await fetch(`/api/novels/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update novel");
+    const updated = await res.json();
+    setNovels((prev) => prev.map((n) => (n.id === id ? { ...n, ...updated } : n)));
+    return updated as Novel;
+  };
+
+  return { novels, isLoading, error, createNovel, deleteNovel, updateNovel, refetch: fetchNovels };
 }

@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function ChapterSidebar({ novelId, novelTitle, activeChapterId }: Props) {
-  const { chapters, isLoading, createChapter, deleteChapter } = useChapters(novelId);
+  const { chapters, isLoading, createChapter, deleteChapter, updateChapter } = useChapters(novelId);
 
   return (
     <div className="flex flex-col h-full">
@@ -40,6 +40,7 @@ export function ChapterSidebar({ novelId, novelTitle, activeChapterId }: Props) 
                 novelId={novelId}
                 isActive={chapter.id === activeChapterId}
                 onDelete={deleteChapter}
+                onUpdate={updateChapter}
               />
             ))}
           </div>

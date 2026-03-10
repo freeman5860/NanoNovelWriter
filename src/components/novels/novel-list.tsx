@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen } from "lucide-react";
 
 export function NovelList() {
-  const { novels, isLoading, error, createNovel, deleteNovel } = useNovels();
+  const { novels, isLoading, error, createNovel, deleteNovel, updateNovel } = useNovels();
 
   if (isLoading) {
     return (
@@ -43,7 +43,7 @@ export function NovelList() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {novels.map((novel) => (
-            <NovelCard key={novel.id} novel={novel} onDelete={deleteNovel} />
+            <NovelCard key={novel.id} novel={novel} onDelete={deleteNovel} onUpdate={updateNovel} />
           ))}
         </div>
       )}

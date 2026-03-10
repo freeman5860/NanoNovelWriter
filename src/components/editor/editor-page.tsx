@@ -19,6 +19,7 @@ interface Props {
   chapterTitle: string;
   initialContent: string;
   aiProvider?: string | null;
+  initialCharacters?: string | null;
 }
 
 export function EditorPage({
@@ -28,6 +29,7 @@ export function EditorPage({
   chapterTitle,
   initialContent,
   aiProvider,
+  initialCharacters,
 }: Props) {
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,8 +142,10 @@ export function EditorPage({
       {/* AI sidebar */}
       <aside className="w-64 border-l flex flex-col shrink-0">
         <AISidebar
+          novelId={novelId}
           novelTitle={novelTitle}
           chapterTitle={chapterTitle}
+          initialCharacters={initialCharacters ?? null}
           getContent={getContent}
           getSelectedText={getSelectedText}
           onInsert={handleInsert}
