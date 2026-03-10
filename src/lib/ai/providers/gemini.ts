@@ -14,7 +14,7 @@ export class GeminiProvider implements AIProvider {
 
   async generateStream(params: GenerateParams): Promise<ReadableStream<string>> {
     const model = this.client.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-flash-latest",
       systemInstruction: params.systemPrompt,
     });
 
