@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ChapterSidebar } from "@/components/chapters/chapter-sidebar";
+import { OutlinePanel } from "@/components/novels/outline-panel";
 
 interface Props {
   params: Promise<{ novelId: string }>;
@@ -23,15 +24,20 @@ export default async function NovelDetailPage({ params }: Props) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <aside className="w-64 border-r flex flex-col shrink-0">
+      <aside className="w-56 border-r flex flex-col shrink-0">
         <ChapterSidebar novelId={novel.id} novelTitle={novel.title} />
       </aside>
-      <main className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-        <p className="text-lg font-medium">{novel.title}</p>
-        {novel.description && (
-          <p className="text-sm mt-2 max-w-md text-center">{novel.description}</p>
-        )}
-        <p className="text-sm mt-4">从左侧选择章节开始编辑，或新建章节</p>
+      <main className="flex-1 overflow-hidden">
+        <OutlinePanel
+          novelId={novel.id}
+          novelTitle={novel.title}
+          novelDescription={novel.description}
+          novelGenre={novel.genre}
+          novelCharacters={novel.characters}
+          initialOutline={novel.outline}
+          chapters={novel.chapters}
+          aiProvider={novel.aiProvider}
+        />
       </main>
     </div>
   );

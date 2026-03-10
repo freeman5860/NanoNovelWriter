@@ -6,6 +6,7 @@ export interface Novel {
   aiProvider: string | null;
   aiModel: string | null;
   characters: string | null;
+  outline: string | null;
   createdAt: Date;
   updatedAt: Date;
   chapters?: Chapter[];
@@ -41,6 +42,7 @@ export interface UpdateNovelInput {
   aiProvider?: string;
   aiModel?: string;
   characters?: string;
+  outline?: string;
 }
 
 export interface Character {
@@ -59,14 +61,17 @@ export interface UpdateChapterInput {
   wordCount?: number;
 }
 
-export type AIActionType = "generate" | "continue" | "polish";
+export type AIActionType = "generate" | "continue" | "polish" | "outline";
 
 export interface AIGenerateRequest {
   action: AIActionType;
   chapterContent?: string;
   selectedText?: string;
   novelTitle?: string;
+  novelDescription?: string;
+  novelGenre?: string;
   chapterTitle?: string;
+  chapterTitles?: string[];
   provider?: string;
   characters?: string;
 }
