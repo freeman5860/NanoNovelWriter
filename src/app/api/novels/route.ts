@@ -22,18 +22,24 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await request.json();
-  const { title, description, genre, aiProvider, aiModel } = body;
+    const body = await request.json();
+    const { title, description, genre, aiProvider, aiModel } = body;
 
-  if (!title?.trim()) {
-    return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    if (!title?.trim()) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    }
+
+    const novel = await prisma.novel.create({
+      data: { title: title.trim(), description, genre, aiProvider, aiModel, userId: session.user.id },
+    });
+    return NextResponse.json(novel, { status: 201 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("[POST /api/novels]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const novel = await prisma.novel.create({
-    data: { title: title.trim(), description, genre, aiProvider, aiModel, userId: session.user.id },
-  });
-  return NextResponse.json(novel, { status: 201 });
 }
