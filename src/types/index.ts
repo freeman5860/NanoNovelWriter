@@ -64,7 +64,7 @@ export interface UpdateChapterInput {
   wordCount?: number;
 }
 
-export type AIActionType = "generate" | "continue" | "polish" | "outline";
+export type AIActionType = "generate" | "continue" | "polish" | "outline" | "dialogue";
 
 export interface AIGenerateRequest {
   action: AIActionType;
@@ -77,4 +77,5 @@ export interface AIGenerateRequest {
   chapterTitles?: string[];
   provider?: string;
   characters?: string;
+  dialogueCharacters?: string[];
 }

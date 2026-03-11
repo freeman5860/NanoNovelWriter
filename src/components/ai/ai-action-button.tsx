@@ -10,6 +10,7 @@ const ACTION_LABELS: Record<AIActionType, string> = {
   continue: "续写",
   polish: "润色",
   outline: "生成大纲",
+  dialogue: "生成对话",
 };
 
 interface Props {

@@ -8,7 +8,7 @@ import { CharacterPanel } from "./character-panel";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X, Download } from "lucide-react";
+import { Check, X, Download, MessageSquare } from "lucide-react";
 import { AIActionType, Character } from "@/types";
 import { exportAsTxt, exportAsMarkdown } from "@/lib/export";
 
@@ -42,6 +42,8 @@ export function AISidebar({
       return [];
     }
   });
+  const [selectedDialogueChars, setSelectedDialogueChars] = useState<string[]>([]);
+  const [showDialogueSelector, setShowDialogueSelector] = useState(false);
 
   const handleCharactersChange = async (newChars: Character[]) => {
     setCharacters(newChars);
@@ -52,8 +54,23 @@ export function AISidebar({
     });
   };
 
+  const toggleDialogueChar = (name: string) => {
+    setSelectedDialogueChars((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  };
+
   const handleAction = async (action: AIActionType) => {
+    if (action === "dialogue" && characters.length > 0) {
+      setShowDialogueSelector(true);
+      return;
+    }
+    await runAction(action, []);
+  };
+
+  const runAction = async (action: AIActionType, dialogueChars: string[]) => {
     setLastAction(action);
+    setShowDialogueSelector(false);
     reset();
     await generate({
       action,
@@ -63,6 +80,7 @@ export function AISidebar({
       selectedText: action === "polish" ? getSelectedText() : undefined,
       provider,
       characters: characters.length > 0 ? JSON.stringify(characters) : undefined,
+      dialogueCharacters: dialogueChars.length > 0 ? dialogueChars : undefined,
     });
   };
 
@@ -101,9 +119,60 @@ export function AISidebar({
             isLoading={isStreaming && lastAction === "polish"}
             disabled={isStreaming}
           />
+          <AiActionButton
+            action="dialogue"
+            onClick={() => handleAction("dialogue")}
+            isLoading={isStreaming && lastAction === "dialogue"}
+            disabled={isStreaming}
+          />
         </div>
-        {lastAction === "polish" && (
+        {lastAction === "polish" && !showDialogueSelector && (
           <p className="text-xs text-muted-foreground">润色：选中文字后点击润色</p>
+        )}
+
+        {/* 对话角色选择器 */}
+        {showDialogueSelector && (
+          <div className="rounded-md border bg-muted/30 p-2.5 space-y-2">
+            <p className="text-xs font-medium flex items-center gap-1">
+              <MessageSquare className="h-3 w-3" />
+              选择对话角色（可多选）
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {characters.map((c) => (
+                <button
+                  key={c.name}
+                  onClick={() => toggleDialogueChar(c.name)}
+                  className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                    selectedDialogueChars.includes(c.name)
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-input hover:bg-accent"
+                  }`}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5 pt-0.5">
+              <Button
+                size="sm"
+                className="flex-1 h-7 text-xs"
+                onClick={() => runAction("dialogue", selectedDialogueChars)}
+              >
+                生成对话
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={() => {
+                  setShowDialogueSelector(false);
+                  setSelectedDialogueChars([]);
+                }}
+              >
+                取消
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 

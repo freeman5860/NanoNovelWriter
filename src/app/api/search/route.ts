@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export interface SearchResult {
   type: "novel" | "chapter";
@@ -11,7 +12,6 @@ export interface SearchResult {
 }
 
 function extractExcerpt(content: string, query: string): string {
-  // content is TipTap JSON; extract plain text from "text" nodes
   let plainText = "";
   try {
     const walk = (node: Record<string, unknown>) => {
@@ -31,12 +31,18 @@ function extractExcerpt(content: string, query: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const q = req.nextUrl.searchParams.get("q")?.trim();
   if (!q || q.length < 1) return NextResponse.json([]);
+
+  const userId = session.user.id;
 
   const [novels, chapters] = await Promise.all([
     prisma.novel.findMany({
       where: {
+        userId,
         OR: [
           { title: { contains: q, mode: "insensitive" } },
           { description: { contains: q, mode: "insensitive" } },
@@ -47,6 +53,7 @@ export async function GET(req: NextRequest) {
     }),
     prisma.chapter.findMany({
       where: {
+        novel: { userId },
         OR: [
           { title: { contains: q, mode: "insensitive" } },
           { content: { contains: q, mode: "insensitive" } },

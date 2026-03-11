@@ -10,7 +10,12 @@
       "Bash(git:*)",
       "Bash(git stash:*)",
       "Bash(pnpm prisma:*)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(wc:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

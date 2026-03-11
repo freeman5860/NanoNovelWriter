@@ -53,6 +53,16 @@ function buildPrompts(body: AIGenerateRequest): {
         userPrompt: `为小说《${novelTitle}》生成详细大纲。${genreInfo}${descInfo}${characterContext}${chaptersInfo}\n\n请输出：\n1. 故事梗概（100字）\n2. 主要矛盾与主题\n3. 故事分幕结构（开端/发展/高潮/结局）\n4. 建议章节规划（10-15章，每章一句话概括）`,
       };
     }
+    case "dialogue": {
+      const last400 = body.chapterContent?.slice(-400) ?? "";
+      const speakerInfo = body.dialogueCharacters?.length
+        ? `对话角色：${body.dialogueCharacters.join("、")}\n`
+        : "";
+      return {
+        systemPrompt: `你是小说创作助手，书名《${novelTitle}》。${characterContext}\n只输出对话正文，格式为"角色名："加对话内容，每行一句，不要额外解释。`,
+        userPrompt: `${speakerInfo}根据以下场景上下文，生成一段自然流畅、符合角色性格的对话（6-10行）：\n\n${last400 || "章节开头场景"}`,
+      };
+    }
     default:
       throw new Error(`Unknown action: ${body.action}`);
   }
