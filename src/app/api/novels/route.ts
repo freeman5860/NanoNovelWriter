@@ -3,22 +3,28 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const novels = await prisma.novel.findMany({
-    where: { userId: session.user.id },
-    orderBy: { updatedAt: "desc" },
-    include: {
-      _count: { select: { chapters: true } },
-      chapters: { select: { wordCount: true } },
-    },
-  });
-  const result = novels.map(({ chapters, ...novel }) => ({
-    ...novel,
-    totalWordCount: chapters.reduce((sum, c) => sum + c.wordCount, 0),
-  }));
-  return NextResponse.json(result);
+    const novels = await prisma.novel.findMany({
+      where: { userId: session.user.id },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        _count: { select: { chapters: true } },
+        chapters: { select: { wordCount: true } },
+      },
+    });
+    const result = novels.map(({ chapters, ...novel }) => ({
+      ...novel,
+      totalWordCount: chapters.reduce((sum, c) => sum + c.wordCount, 0),
+    }));
+    return NextResponse.json(result);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("[GET /api/novels]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
