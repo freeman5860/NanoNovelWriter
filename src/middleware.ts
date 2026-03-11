@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
 
-export async function middleware(request: NextRequest) {
-  const session = await auth();
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublic =
@@ -11,13 +9,20 @@ export async function middleware(request: NextRequest) {
     pathname === "/register" ||
     pathname.startsWith("/api/auth");
 
-  if (!session && !isPublic) {
+  // Check for NextAuth session cookie (no DB/bcrypt import needed)
+  const sessionToken =
+    request.cookies.get("__Secure-authjs.session-token") ||
+    request.cookies.get("authjs.session-token");
+
+  const isLoggedIn = !!sessionToken;
+
+  if (!isLoggedIn && !isPublic) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (session && (pathname === "/login" || pathname === "/register")) {
+  if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
     return NextResponse.redirect(new URL("/novels", request.url));
   }
 
