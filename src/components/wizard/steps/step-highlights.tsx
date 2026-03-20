@@ -15,15 +15,17 @@ export function StepHighlights({ value, onChange, isStreaming, streamedText }: S
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">故事亮点</h3>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">亮点&简介</h3>
         <p className="text-sm text-muted-foreground">
-          {isStreaming ? "AI正在提炼故事亮点..." : "你可以编辑AI生成的内容"}
+          {isStreaming
+            ? "AI正在为您提炼亮点&简介..."
+            : "AI已为您生成了亮点&简介，您可以查看并修改。确认无误后点击完成即可创建大纲"}
         </p>
       </div>
       {isStreaming ? (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-orange-500">
+          <div className="flex items-center justify-center gap-2 text-orange-500">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm">AI生成中...</span>
           </div>
@@ -42,8 +44,8 @@ export function StepHighlights({ value, onChange, isStreaming, streamedText }: S
             className="resize-none"
             placeholder="故事亮点和卖点..."
           />
-          <p className="text-xs text-muted-foreground text-right">
-            {displayText.length}/200
+          <p className="text-xs text-muted-foreground">
+            最多200字，当前：{displayText.length}/200
           </p>
         </div>
       )}

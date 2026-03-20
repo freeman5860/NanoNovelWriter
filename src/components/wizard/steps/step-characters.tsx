@@ -55,11 +55,11 @@ export function StepCharacters({ characters, onChange, isStreaming, streamedText
   if (isStreaming) {
     return (
       <div className="space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold">角色设计</h3>
-          <p className="text-sm text-muted-foreground">AI正在设计角色...</p>
+        <div className="text-center">
+          <h3 className="text-lg font-semibold">角色设定</h3>
+          <p className="text-sm text-muted-foreground">AI正在为您设计角色...</p>
         </div>
-        <div className="flex items-center gap-2 text-orange-500">
+        <div className="flex items-center justify-center gap-2 text-orange-500">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm">AI生成中...</span>
         </div>
@@ -72,13 +72,8 @@ export function StepCharacters({ characters, onChange, isStreaming, streamedText
 
   const renderCharacterSection = (title: string, chars: WizardCharacter[], role: "protagonist" | "supporting") => (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-muted-foreground">{title}</h4>
-        <Button variant="ghost" size="sm" onClick={() => addCharacter(role)} className="h-7 text-xs gap-1">
-          <Plus className="h-3 w-3" /> 添加
-        </Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
+      <h4 className="text-sm font-semibold text-muted-foreground">{title}</h4>
+      <div className="flex flex-wrap gap-2 items-center">
         {chars.map((c) => {
           const globalIdx = characters.indexOf(c);
           if (editIdx === globalIdx) {
@@ -126,15 +121,23 @@ export function StepCharacters({ characters, onChange, isStreaming, streamedText
             </div>
           );
         })}
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => addCharacter(role)}
+          className="h-8 rounded-full gap-1 bg-orange-500 hover:bg-orange-600 text-white"
+        >
+          <Plus className="h-3 w-3" /> 新增
+        </Button>
       </div>
     </div>
   );
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">角色设计</h3>
-        <p className="text-sm text-muted-foreground">点击角色标签可编辑，点击 X 删除</p>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">角色设定</h3>
+        <p className="text-sm text-muted-foreground">AI已为您生成了主角和配角，点击角色标签可以查看和修改详细信息</p>
       </div>
       {renderCharacterSection("主角", protagonists, "protagonist")}
       {renderCharacterSection("配角", supporting, "supporting")}

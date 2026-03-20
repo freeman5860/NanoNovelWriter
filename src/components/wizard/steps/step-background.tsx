@@ -15,15 +15,15 @@ export function StepBackground({ value, onChange, isStreaming, streamedText }: S
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">故事背景</h3>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">故事背景设定</h3>
         <p className="text-sm text-muted-foreground">
-          {isStreaming ? "AI正在生成故事背景..." : "你可以编辑AI生成的内容"}
+          {isStreaming ? "AI正在为您生成故事背景设定..." : "AI已为您生成了故事背景设定，您可以查看并修改"}
         </p>
       </div>
       {isStreaming ? (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-orange-500">
+          <div className="flex items-center justify-center gap-2 text-orange-500">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm">AI生成中...</span>
           </div>
@@ -42,8 +42,8 @@ export function StepBackground({ value, onChange, isStreaming, streamedText }: S
             className="resize-none"
             placeholder="故事背景描述..."
           />
-          <p className="text-xs text-muted-foreground text-right">
-            {displayText.length}/2000
+          <p className="text-xs text-muted-foreground">
+            最多2000字，当前：{displayText.length}/2000
           </p>
         </div>
       )}

@@ -15,15 +15,15 @@ export function StepPlot({ value, onChange, isStreaming, streamedText }: StepPlo
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">情节梗概</h3>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">故事主要情节</h3>
         <p className="text-sm text-muted-foreground">
-          {isStreaming ? "AI正在生成情节梗概..." : "你可以编辑AI生成的内容"}
+          {isStreaming ? "AI正在为您生成故事主要情节..." : "AI已为您生成了故事主要情节，您可以查看并修改"}
         </p>
       </div>
       {isStreaming ? (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-orange-500">
+          <div className="flex items-center justify-center gap-2 text-orange-500">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm">AI生成中...</span>
           </div>
@@ -42,8 +42,8 @@ export function StepPlot({ value, onChange, isStreaming, streamedText }: StepPlo
             className="resize-none"
             placeholder="故事情节梗概..."
           />
-          <p className="text-xs text-muted-foreground text-right">
-            {displayText.length}/5000
+          <p className="text-xs text-muted-foreground">
+            最多5000字，当前：{displayText.length}/5000
           </p>
         </div>
       )}

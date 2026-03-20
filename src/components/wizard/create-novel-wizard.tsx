@@ -28,7 +28,7 @@ import { Novel } from "@/types";
 interface WizardState {
   open: boolean;
   phase: 1 | 2;
-  step: number; // 0-indexed within current phase
+  step: number;
   novelType: string | null;
   audience: string | null;
   concept: string;
@@ -118,15 +118,21 @@ const phase2Steps = [
   { label: "亮点" },
 ];
 
+const phase2Messages = [
+  "还差4步了哦，故事即将诞生！",
+  "正在快马加鞭赶来！",
+  "马上就要大功告成啦！",
+  "还差1步哦，马上就要大功告成！",
+  "最后一步啦，确认无误后点击完成！",
+];
+
 function getProgressMessage(phase: number, step: number): string {
   if (phase === 1) {
     const remaining = 3 - step;
     if (remaining <= 1) return "最后一步啦！";
-    return `还差${remaining}步，马上开始创作！`;
+    return `还差${remaining}步，你的故事即将诞生！`;
   }
-  const remaining = 5 - step;
-  if (remaining <= 1) return "最后一步，大纲即将完成！";
-  return `还差${remaining}步了哦，正在快马加鞭赶来！`;
+  return phase2Messages[step] || "";
 }
 
 // --- Component ---
@@ -146,20 +152,24 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
   const router = useRouter();
   const [state, dispatch] = useReducer(reducer, initialState);
   const ai = useAIStream();
+
+  // Refs to avoid stale closures in async handlers
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const aiTriggerRef = useRef(state.aiTriggered);
   aiTriggerRef.current = state.aiTriggered;
 
-  // Derive title from concept
   const derivedTitle = state.concept.slice(0, 20) || "未命名小说";
 
   // --- AI auto-trigger for phase 2 ---
   const triggerAI = useCallback(
     (step: number) => {
       const keys = ["background", "characters", "plot", "highlights"];
-      const key = keys[step - 1]; // step 0 = chapters, step 1 = background, etc.
+      const key = keys[step - 1];
       if (!key || aiTriggerRef.current[key] || ai.isStreaming) return;
 
       dispatch({ type: "MARK_AI_TRIGGERED", key });
+      const s = stateRef.current;
 
       switch (key) {
         case "background":
@@ -167,9 +177,9 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
           ai.generate(
             {
               action: "wizard-background",
-              audience: state.audience ?? undefined,
-              concept: state.concept,
-              targetChapters: state.targetChapters,
+              audience: s.audience ?? undefined,
+              concept: s.concept,
+              targetChapters: s.targetChapters,
             },
             undefined,
             (fullText) => dispatch({ type: "SET_FIELD", field: "background", value: fullText })
@@ -180,9 +190,9 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
           ai.generate(
             {
               action: "wizard-characters",
-              audience: state.audience ?? undefined,
-              concept: state.concept,
-              background: state.background,
+              audience: s.audience ?? undefined,
+              concept: s.concept,
+              background: s.background,
             },
             undefined,
             (fullText) => {
@@ -212,16 +222,16 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
           ai.generate(
             {
               action: "wizard-plot",
-              concept: state.concept,
-              background: state.background,
+              concept: s.concept,
+              background: s.background,
               characters: JSON.stringify(
-                state.characters.map((c) => ({
+                s.characters.map((c) => ({
                   name: c.name,
                   role: c.role === "protagonist" ? "主角" : "配角",
                   description: c.description,
                 }))
               ),
-              targetChapters: state.targetChapters,
+              targetChapters: s.targetChapters,
             },
             undefined,
             (fullText) => dispatch({ type: "SET_FIELD", field: "plotSummary", value: fullText })
@@ -232,9 +242,9 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
           ai.generate(
             {
               action: "wizard-highlights",
-              concept: state.concept,
-              background: state.background,
-              plotSummary: state.plotSummary,
+              concept: s.concept,
+              background: s.background,
+              plotSummary: s.plotSummary,
             },
             undefined,
             (fullText) => dispatch({ type: "SET_FIELD", field: "highlights", value: fullText })
@@ -242,7 +252,7 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
           break;
       }
     },
-    [ai, state.audience, state.concept, state.targetChapters, state.background, state.characters, state.plotSummary]
+    [ai]
   );
 
   // Auto-trigger AI when entering AI steps in phase 2
@@ -255,16 +265,18 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
   // --- Handlers ---
 
   const handleCreateNovel = async () => {
+    // Capture novelType before any async work to avoid stale closure
+    const novelType = stateRef.current.novelType;
     dispatch({ type: "SET_SUBMITTING", value: true });
     dispatch({ type: "SET_ERROR", value: "" });
     try {
       const novel = await onCreate({
         title: derivedTitle,
-        novelType: state.novelType ?? undefined,
-        audience: state.audience ?? undefined,
-        concept: state.concept || undefined,
+        novelType: novelType ?? undefined,
+        audience: stateRef.current.audience ?? undefined,
+        concept: stateRef.current.concept || undefined,
       });
-      if (state.novelType === "short") {
+      if (novelType === "short") {
         dispatch({ type: "CLOSE" });
         router.push(`/novels/${novel.id}`);
       } else {
@@ -278,30 +290,33 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
   };
 
   const handleFinish = async () => {
-    if (!state.novelId) return;
+    const novelId = stateRef.current.novelId;
+    if (!novelId) return;
     dispatch({ type: "SET_SUBMITTING", value: true });
     dispatch({ type: "SET_ERROR", value: "" });
     try {
+      const s = stateRef.current;
       const charactersJson = JSON.stringify(
-        state.characters.map((c) => ({
+        s.characters.map((c) => ({
           name: c.name,
           role: c.role === "protagonist" ? "主角" : "配角",
           description: c.description,
         }))
       );
-      await fetch(`/api/novels/${state.novelId}`, {
+      const res = await fetch(`/api/novels/${novelId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          background: state.background,
-          plotSummary: state.plotSummary,
-          highlights: state.highlights,
-          targetChapters: state.targetChapters,
+          background: s.background,
+          plotSummary: s.plotSummary,
+          highlights: s.highlights,
+          targetChapters: s.targetChapters,
           characters: charactersJson,
         }),
       });
+      if (!res.ok) throw new Error("保存失败");
       dispatch({ type: "CLOSE" });
-      router.push(`/novels/${state.novelId}`);
+      router.push(`/novels/${novelId}`);
     } catch (err) {
       dispatch({ type: "SET_ERROR", value: err instanceof Error ? err.message : "保存失败" });
     } finally {
@@ -329,7 +344,6 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
 
   const handleSkipToManual = (field: string) => {
     dispatch({ type: "MARK_AI_TRIGGERED", key: field });
-    // Don't trigger AI, let user fill manually
   };
 
   // --- Validation ---
@@ -428,15 +442,24 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
 
   const getNextLabel = (): string => {
     if (state.phase === 1 && state.step === 2) return "确认并生成模板";
-    if (state.phase === 2 && state.step === 4) return "完成";
+    if (state.phase === 2) {
+      switch (state.step) {
+        case 0: return "下一步: 生成故事背景";
+        case 1: return "下一步: 生成角色";
+        case 2: return "下一步: 生成情节";
+        case 3: return "下一步: 生成亮点";
+        case 4: return "完成";
+      }
+    }
     return "下一步";
   };
 
   const getSkipInfo = (): { label: string; field: string } | null => {
     if (state.phase === 2) {
-      if (state.step === 1) return { label: "我已有故事背景，点击直接填写", field: "background" };
-      if (state.step === 3) return { label: "我已有情节梗概，点击直接填写", field: "plot" };
-      if (state.step === 4) return { label: "我已有故事亮点，点击直接填写", field: "highlights" };
+      if (state.step === 0) return { label: "我已有故事背景，点击直接填写", field: "background" };
+      if (state.step === 1) return { label: "我已有角色，点击直接填写", field: "characters" };
+      if (state.step === 2) return { label: "我已有故事情节，点击直接填写", field: "plot" };
+      if (state.step === 3) return { label: "我已有亮点&简介，点击直接填写", field: "highlights" };
     }
     return null;
   };
