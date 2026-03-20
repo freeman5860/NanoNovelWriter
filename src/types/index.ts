@@ -8,6 +8,13 @@ export interface Novel {
   characters: string | null;
   outline: string | null;
   wordGoal: number | null;
+  novelType: string | null;
+  audience: string | null;
+  concept: string | null;
+  background: string | null;
+  plotSummary: string | null;
+  highlights: string | null;
+  targetChapters: number | null;
   totalWordCount?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -35,6 +42,9 @@ export interface CreateNovelInput {
   genre?: string;
   aiProvider?: string;
   aiModel?: string;
+  novelType?: string;
+  audience?: string;
+  concept?: string;
 }
 
 export interface UpdateNovelInput {
@@ -46,6 +56,10 @@ export interface UpdateNovelInput {
   characters?: string;
   outline?: string;
   wordGoal?: number | null;
+  background?: string;
+  plotSummary?: string;
+  highlights?: string;
+  targetChapters?: number;
 }
 
 export interface Character {
@@ -64,7 +78,16 @@ export interface UpdateChapterInput {
   wordCount?: number;
 }
 
-export type AIActionType = "generate" | "continue" | "polish" | "outline" | "dialogue";
+export type AIActionType =
+  | "generate"
+  | "continue"
+  | "polish"
+  | "outline"
+  | "dialogue"
+  | "wizard-background"
+  | "wizard-characters"
+  | "wizard-plot"
+  | "wizard-highlights";
 
 export interface AIGenerateRequest {
   action: AIActionType;
@@ -78,4 +101,10 @@ export interface AIGenerateRequest {
   provider?: string;
   characters?: string;
   dialogueCharacters?: string[];
+  novelType?: string;
+  audience?: string;
+  concept?: string;
+  background?: string;
+  plotSummary?: string;
+  targetChapters?: number;
 }

@@ -64,20 +64,27 @@ model VerificationToken {
 }
 
 model Novel {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  genre       String?
-  aiProvider  String?
-  aiModel     String?
-  characters  String?
-  outline     String?
-  wordGoal    Int?
-  userId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chapters    Chapter[]
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  genre          String?
+  aiProvider     String?
+  aiModel        String?
+  characters     String?
+  outline        String?
+  wordGoal       Int?
+  novelType      String?
+  audience       String?
+  concept        String?
+  background     String?
+  plotSummary    String?
+  highlights     String?
+  targetChapters Int?
+  userId         String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapters       Chapter[]
 
   @@index([userId])
   @@map("novels")

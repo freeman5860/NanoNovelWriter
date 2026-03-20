@@ -33,14 +33,14 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { title, description, genre, aiProvider, aiModel } = body;
+    const { title, description, genre, aiProvider, aiModel, novelType, audience, concept } = body;
 
     if (!title?.trim()) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
     const novel = await prisma.novel.create({
-      data: { title: title.trim(), description, genre, aiProvider, aiModel, userId: session.user.id },
+      data: { title: title.trim(), description, genre, aiProvider, aiModel, novelType, audience, concept, userId: session.user.id },
     });
     return NextResponse.json(novel, { status: 201 });
   } catch (e) {

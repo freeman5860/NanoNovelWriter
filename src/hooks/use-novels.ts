@@ -30,6 +30,9 @@ export function useNovels() {
     title: string;
     description?: string;
     genre?: string;
+    novelType?: string;
+    audience?: string;
+    concept?: string;
   }) => {
     const res = await fetch("/api/novels", {
       method: "POST",

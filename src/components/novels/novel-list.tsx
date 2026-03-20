@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useNovels } from "@/hooks/use-novels";
 import { NovelCard } from "./novel-card";
-import { CreateNovelDialog } from "./create-novel-dialog";
+import { CreateNovelWizard } from "@/components/wizard/create-novel-wizard";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ export function NovelList() {
                 ⌘K
               </kbd>
             </Button>
-            <CreateNovelDialog onCreate={createNovel} />
+            <CreateNovelWizard onCreate={createNovel} />
           </div>
         </div>
 

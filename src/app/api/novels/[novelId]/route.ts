@@ -25,11 +25,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   const { novelId } = await params;
   const body = await request.json();
-  const { title, description, genre, aiProvider, aiModel, characters, outline, wordGoal } = body;
+  const { title, description, genre, aiProvider, aiModel, characters, outline, wordGoal, background, plotSummary, highlights, targetChapters } = body;
 
   const novel = await prisma.novel.updateMany({
     where: { id: novelId, userId: session.user.id },
-    data: { title, description, genre, aiProvider, aiModel, characters, outline, wordGoal },
+    data: { title, description, genre, aiProvider, aiModel, characters, outline, wordGoal, background, plotSummary, highlights, targetChapters },
   });
   if (novel.count === 0) return NextResponse.json({ error: "Novel not found" }, { status: 404 });
 

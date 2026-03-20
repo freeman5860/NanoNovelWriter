@@ -11,6 +11,10 @@ const ACTION_LABELS: Record<AIActionType, string> = {
   polish: "润色",
   outline: "生成大纲",
   dialogue: "生成对话",
+  "wizard-background": "生成背景",
+  "wizard-characters": "生成角色",
+  "wizard-plot": "生成情节",
+  "wizard-highlights": "生成亮点",
 };
 
 interface Props {

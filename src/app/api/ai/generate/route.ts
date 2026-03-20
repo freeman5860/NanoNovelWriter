@@ -63,6 +63,34 @@ function buildPrompts(body: AIGenerateRequest): {
         userPrompt: `${speakerInfo}根据以下场景上下文，生成一段自然流畅、符合角色性格的对话（6-10行）：\n\n${last400 || "章节开头场景"}`,
       };
     }
+    case "wizard-background": {
+      const audienceLabel = body.audience === "male" ? "男频" : "女频";
+      const chaptersHint = body.targetChapters ? `，计划${body.targetChapters}章` : "";
+      return {
+        systemPrompt: `你是专业小说策划师，擅长构建宏大的世界观和故事背景。只输出故事背景文本，不要标题或额外解释。`,
+        userPrompt: `为一部${audienceLabel}长篇小说生成故事背景${chaptersHint}。\n\n创意构思：${body.concept ?? "无"}\n\n请生成约500字的故事背景，包括世界观设定、时代背景、核心矛盾等。`,
+      };
+    }
+    case "wizard-characters": {
+      const audienceLabel2 = body.audience === "male" ? "男频" : "女频";
+      return {
+        systemPrompt: `你是专业小说策划师，擅长设计鲜明的角色。严格按JSON格式输出，不要任何额外文字。`,
+        userPrompt: `根据以下信息，为这部${audienceLabel2}小说设计角色：\n\n故事背景：${body.background ?? "无"}\n创意构思：${body.concept ?? "无"}\n\n请严格按以下JSON格式输出：\n{"protagonists":[{"name":"角色名","description":"角色描述"}],"supporting":[{"name":"角色名","description":"角色描述"}]}\n\n设计2-3个主角和3-5个配角。`,
+      };
+    }
+    case "wizard-plot": {
+      const chaptersHint2 = body.targetChapters ? `，共${body.targetChapters}章` : "";
+      return {
+        systemPrompt: `你是专业小说策划师，擅长设计引人入胜的故事情节。只输出情节梗概文本，不要标题或额外解释。`,
+        userPrompt: `根据以下信息，生成故事情节梗概${chaptersHint2}：\n\n故事背景：${body.background ?? "无"}\n角色信息：${body.characters ?? "无"}\n创意构思：${body.concept ?? "无"}\n\n请生成约1000字的情节梗概，包括开端、发展、高潮、结局的详细描述。`,
+      };
+    }
+    case "wizard-highlights": {
+      return {
+        systemPrompt: `你是专业小说策划师，擅长提炼故事亮点。只输出亮点文本，不要标题或额外解释。`,
+        userPrompt: `根据以下信息，提炼故事亮点和卖点简介：\n\n故事背景：${body.background ?? "无"}\n情节梗概：${body.plotSummary ?? "无"}\n创意构思：${body.concept ?? "无"}\n\n请生成约200字的亮点描述，突出故事的核心卖点和吸引读者的关键元素。`,
+      };
+    }
     default:
       throw new Error(`Unknown action: ${body.action}`);
   }
