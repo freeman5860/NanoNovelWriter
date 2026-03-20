@@ -42,6 +42,7 @@ interface WizardState {
   isSubmitting: boolean;
   error: string;
   aiTriggered: Record<string, boolean>;
+  redirectTo: string | null; // Navigation handled by useEffect, not async handlers
 }
 
 const initialState: WizardState = {
@@ -61,6 +62,7 @@ const initialState: WizardState = {
   isSubmitting: false,
   error: "",
   aiTriggered: {},
+  redirectTo: null,
 };
 
 type Action =
@@ -69,10 +71,12 @@ type Action =
   | { type: "SET_FIELD"; field: string; value: unknown }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" }
-  | { type: "START_PHASE_2"; novelId: string }
+  | { type: "NOVEL_CREATED"; novelId: string }
+  | { type: "OUTLINE_SAVED" }
   | { type: "SET_SUBMITTING"; value: boolean }
   | { type: "SET_ERROR"; value: string }
   | { type: "MARK_AI_TRIGGERED"; key: string }
+  | { type: "CLEAR_REDIRECT" }
   | { type: "RESET" };
 
 function reducer(state: WizardState, action: Action): WizardState {
@@ -89,14 +93,23 @@ function reducer(state: WizardState, action: Action): WizardState {
       return { ...state, step: state.step + 1 };
     case "PREV_STEP":
       return { ...state, step: Math.max(0, state.step - 1) };
-    case "START_PHASE_2":
+    // Reducer has guaranteed-current state — branching here avoids stale closures
+    case "NOVEL_CREATED":
+      if (state.novelType === "short") {
+        return { ...state, open: false, novelId: action.novelId, redirectTo: `/novels/${action.novelId}` };
+      }
+      // Long novel → enter Phase 2
       return { ...state, phase: 2, step: 0, novelId: action.novelId };
+    case "OUTLINE_SAVED":
+      return { ...state, open: false, redirectTo: `/novels/${state.novelId}` };
     case "SET_SUBMITTING":
       return { ...state, isSubmitting: action.value };
     case "SET_ERROR":
       return { ...state, error: action.value };
     case "MARK_AI_TRIGGERED":
       return { ...state, aiTriggered: { ...state.aiTriggered, [action.key]: true } };
+    case "CLEAR_REDIRECT":
+      return { ...state, redirectTo: null };
     default:
       return state;
   }
@@ -153,13 +166,21 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const ai = useAIStream();
 
-  // Refs to avoid stale closures in async handlers
   const stateRef = useRef(state);
   stateRef.current = state;
   const aiTriggerRef = useRef(state.aiTriggered);
   aiTriggerRef.current = state.aiTriggered;
 
   const derivedTitle = state.concept.slice(0, 20) || "未命名小说";
+
+  // --- Navigation via useEffect (avoids stale closures in async handlers) ---
+  useEffect(() => {
+    if (state.redirectTo) {
+      const target = state.redirectTo;
+      dispatch({ type: "CLEAR_REDIRECT" });
+      router.push(target);
+    }
+  }, [state.redirectTo, router]);
 
   // --- AI auto-trigger for phase 2 ---
   const triggerAI = useCallback(
@@ -255,33 +276,27 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
     [ai]
   );
 
-  // Auto-trigger AI when entering AI steps in phase 2
   useEffect(() => {
     if (state.phase === 2 && state.step >= 1) {
       triggerAI(state.step);
     }
   }, [state.phase, state.step, triggerAI]);
 
-  // --- Handlers ---
+  // --- Handlers (no router.push, no branching on novelType — reducer handles it) ---
 
   const handleCreateNovel = async () => {
-    // Capture novelType before any async work to avoid stale closure
-    const novelType = stateRef.current.novelType;
     dispatch({ type: "SET_SUBMITTING", value: true });
     dispatch({ type: "SET_ERROR", value: "" });
     try {
+      const s = stateRef.current;
       const novel = await onCreate({
         title: derivedTitle,
-        novelType: novelType ?? undefined,
-        audience: stateRef.current.audience ?? undefined,
-        concept: stateRef.current.concept || undefined,
+        novelType: s.novelType ?? undefined,
+        audience: s.audience ?? undefined,
+        concept: s.concept || undefined,
       });
-      if (novelType === "short") {
-        dispatch({ type: "CLOSE" });
-        router.push(`/novels/${novel.id}`);
-      } else {
-        dispatch({ type: "START_PHASE_2", novelId: novel.id });
-      }
+      // Reducer reads state.novelType to decide: Phase 2 or redirect
+      dispatch({ type: "NOVEL_CREATED", novelId: novel.id });
     } catch (err) {
       dispatch({ type: "SET_ERROR", value: err instanceof Error ? err.message : "创建失败" });
     } finally {
@@ -315,8 +330,8 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
         }),
       });
       if (!res.ok) throw new Error("保存失败");
-      dispatch({ type: "CLOSE" });
-      router.push(`/novels/${novelId}`);
+      // Reducer sets redirectTo — useEffect navigates
+      dispatch({ type: "OUTLINE_SAVED" });
     } catch (err) {
       dispatch({ type: "SET_ERROR", value: err instanceof Error ? err.message : "保存失败" });
     } finally {
@@ -469,11 +484,13 @@ export function CreateNovelWizard({ onCreate }: CreateNovelWizardProps) {
 
   return (
     <>
-      <Button onClick={() => dispatch({ type: "OPEN" })}>
+      <Button type="button" onClick={() => dispatch({ type: "OPEN" })}>
         <Plus className="mr-2 h-4 w-4" />
         新建小说
       </Button>
-      <Dialog open={state.open} onOpenChange={(open) => !open && dispatch({ type: "CLOSE" })}>
+      <Dialog open={state.open} onOpenChange={(open) => {
+        if (!open && !state.isSubmitting) dispatch({ type: "CLOSE" });
+      }}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>

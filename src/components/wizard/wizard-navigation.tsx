@@ -27,13 +27,14 @@ export function WizardNavigation({
     <div className="flex flex-col gap-2 pt-4 border-t">
       <div className="flex justify-between items-center">
         {showBack && onBack ? (
-          <Button variant="outline" onClick={onBack} disabled={isLoading}>
+          <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
             上一步
           </Button>
         ) : (
           <div />
         )}
         <Button
+          type="button"
           onClick={onNext}
           disabled={nextDisabled || isLoading}
           className="bg-orange-500 hover:bg-orange-600 text-white"
@@ -43,6 +44,7 @@ export function WizardNavigation({
       </div>
       {skipLabel && onSkip && (
         <button
+          type="button"
           onClick={onSkip}
           className="text-sm text-orange-500 hover:text-orange-600 underline text-center"
         >
